@@ -1,0 +1,82 @@
+version: "3.7"
+
+services:
+  # Definição dos Serviços
+  n8n_regular:
+    # imagem do n8n
+    image: n8nio/n8n:latest
+    # comando padrão para subir o servidor web
+    command: n8n start
+    # configura a rede do serviço
+    networks:
+      - network_swarm_public
+    environment:
+      # Define o Tipo de Banco de Dados
+      - DB_TYPE=postgresdb
+      # Configura o Banco de Dados
+      - DB_POSTGRESDB_DATABASE=banco_de_dados_n8n
+      # Configura o Host do Banco de Dados
+      - DB_POSTGRESDB_HOST=postgres
+      # Configura a Porta do Banco de Dados
+      - DB_POSTGRESDB_PORT=5432
+      # Configura o Usuário do Banco de Dados
+      - DB_POSTGRESDB_USER=postgres
+      # Configura a Senha do Banco de Dados
+      - DB_POSTGRESDB_PASSWORD=SENHA
+      # Cria uma chave de criptografia para o N8N
+      # Gere uma nova aqui https://www.avast.com/random-password-generator#mac
+      - N8N_ENCRYPTION_KEY=wcZILRWJUx8pArM9hsdfhfDhjsA
+      # Configura o Host do Editor do N8N
+      - N8N_HOST=editor.n8n.luizeof.dev
+      # Configura o Endereço competo do Editor
+      - N8N_EDITOR_BASE_URL=https://editor.n8n.luizeof.dev/
+      # Força o uso de SSL
+      - N8N_PROTOCOL=https
+      # Configurao ambiente de execução
+      - NODE_ENV=production
+      # Configura o Endereço do Webhook
+      - WEBHOOK_URL=https://webhooks.n8n.luizeof.dev/
+      # Configura o modo de execução
+      - EXECUTIONS_MODE=regular
+      # Reinstala os nodes da comunidade quando reinicia / atualiza o container
+      - N8N_REINSTALL_MISSING_PACKAGES=true
+      # Instala Bibliotecas externas para usar no node Code (use com cuidado)
+      - NODE_FUNCTION_ALLOW_EXTERNAL=lodash
+      # Tempo para Limpeza dos dados de execução
+      - EXECUTIONS_DATA_PRUNE=true
+      # Tempo para Limpeza dos dados de execução em horas
+      - EXECUTIONS_DATA_MAX_AGE=336
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+          # - node.hostname == worker1
+      resources:
+        limits:
+          cpus: "1"
+          memory: 1024M
+      labels:
+        - traefik.enable=true
+        # Rotas do Editor
+        - traefik.http.routers.n8n_regular_editor.rule=(Host(`editor.n8n.luizeof.dev`))
+        - traefik.http.routers.n8n_regular_editor.entrypoints=websecure
+        - traefik.http.routers.n8n_regular_editor.priority=1
+        - traefik.http.routers.n8n_regular_editor.tls.certresolver=letsencryptresolver
+        - traefik.http.routers.n8n_regular_editor.service=n8n_regular_editor
+        - traefik.http.services.n8n_regular_editor.loadbalancer.server.port=5678
+        - traefik.http.services.n8n_regular_editor.loadbalancer.passHostHeader=1
+        # Rotas do Webhook
+        - traefik.http.routers.n8n_regular_webhook.rule=(Host(`webhooks.n8n.luizeof.dev`))
+        - traefik.http.routers.n8n_regular_webhook.entrypoints=websecure
+        - traefik.http.routers.n8n_regular_webhook.priority=1
+        - traefik.http.routers.n8n_regular_webhook.tls.certresolver=letsencryptresolver
+        - traefik.http.routers.n8n_regular_webhook.service=n8n_regular_webhook
+        - traefik.http.services.n8n_regular_webhook.loadbalancer.server.port=5678
+        - traefik.http.services.n8n_regular_webhook.loadbalancer.passHostHeader=1
+
+networks:
+  network_swarm_public:
+    name: network_swarm_public
+    external: true

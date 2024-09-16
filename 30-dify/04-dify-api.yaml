@@ -1,0 +1,47 @@
+version: '3.7'
+
+services:
+  # Define o Serviço de API do Dify
+  dify_api:
+    # Define a imagem do Dify
+    # https://hub.docker.com/r/langgenius/dify-api
+    image: langgenius/dify-api:0.7.1
+    # Define o Hostname
+    hostname: "{{.Service.Name}}.{{.Task.Slot}}"
+    # Define as redes do docker
+    networks:
+      - network_swarm_public
+    # Configurações das Variáveis do Ambiente
+    environment:
+      #########################################################
+      #########################################################
+      # Configurações Gerais do Dify ##########################
+      #########################################################
+      #########################################################
+      # Startup mode, 'api' starts the API server.
+      MODE: api
+
+    deploy:
+      # Modo de Deploy
+      mode: replicated
+      # Número de Réplicas
+      replicas: 1
+      # Define onde o deploy deve ser postado
+      placement:
+        constraints:
+          - node.role == manager
+      # Define os Labels do Traefik
+      labels:
+        - traefik.enable=true
+        - traefik.http.routers.dify_api.rule=Host(`diapi.agenciasynca.com.br`)
+        - traefik.http.routers.dify_api.entrypoints=websecure
+        - traefik.http.routers.dify_api.tls.certresolver=letsencryptresolver
+        - traefik.http.routers.dify_api.priority=1
+        - traefik.http.routers.dify_api.service=dify_api
+        - traefik.http.services.dify_api.loadbalancer.server.port=5001
+        - traefik.http.services.dify_api.loadbalancer.passHostHeader=true
+
+networks:
+  network_swarm_public:
+    external: true
+    name: network_swarm_public

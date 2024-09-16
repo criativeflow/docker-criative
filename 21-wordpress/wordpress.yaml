@@ -1,0 +1,77 @@
+version: "3.7"
+services:
+  # Define o serviço do Wordpress
+  wordpress:
+    # Define a imagem do Wordpress
+    image: luizeof/dockerpress-apache:latest
+    # Define o hostname do container
+    hostname: "{{.Service.Name}}.{{.Task.Slot}}"
+    # Define o entrypoint do Container
+    entrypoint: entrypoint.sh
+    # Define o comando do Container
+    command: apache2-foreground
+    # Define os volumes do Wordpress
+    volumes:
+      - wordpress_data:/var/www/html
+    # Define as Redes do Container
+    networks:
+      - network_swarm_public
+    # Define as Variaveis de Ambiente do Wordpress
+    environment:
+      # Define o Nome do Banco de Dados
+      - WORDPRESS_DB_NAME=wordpress
+      # Define o Servidor do MySQL
+      - WORDPRESS_DB_HOST=mysql
+      # Define a Porta do MySQL
+      - WORDPRESS_DB_PORT=3306
+      # Define o Usuário do MySQL
+      - WORDPRESS_DB_USER=root
+      # Define a Senha do MySQL
+      - WORDPRESS_DB_PASSWORD=SENHA
+      # Define o Host do Redis
+      - WP_REDIS_HOST=redis
+      # Define o Indice do Banco de Dados
+      - WP_REDIS_DATABASE=1
+      # Define o Endereço do Wordpress (sem https)
+      - VIRTUAL_HOST=materiais.seusite.com.br
+      # Define o Usuário Root do Wordpress
+      - ADMIN_USER=admin
+      # Define a Senha do Usuário Root do Wordpress
+      - ADMIN_PASS=password124
+      # Define o E-mail do Usuário Root do Wordpress
+      - ADMIN_EMAIL=contato@seusite.com
+      # Define o idioma do Wordpress
+      - WP_LOCALE=pt_BR
+    deploy:
+      # Define o Modo de Deploy
+      mode: replicated
+      # Define o Número de Replicas
+      replicas: 1
+      # Define a estratégia de deploy do Wordpress
+      placement:
+        constraints:
+          - node.role == manager
+          # - node.hostname == worker1
+      labels:
+        # Habilita o Traefik
+        - traefik.enable=true
+        # Configura o endereço do wordpress
+        - traefik.http.routers.wordpress.rule=Host(`meusite.com.br`)
+        # Configura o SSL do wordpress
+        - traefik.http.routers.wordpress.entrypoints=websecure
+        # Configura o Certificado SSL do wordpress
+        - traefik.http.routers.wordpress.tls.certresolver=letsencryptresolver
+        # Configura o serviço do wordpress
+        - traefik.http.routers.wordpress.service=wordpress
+        # Configura a porta do wordpress
+        - traefik.http.services.wordpress.loadbalancer.server.port=80
+        # Habilita o passHostHeader do wordpress
+        - traefik.http.services.wordpress.loadbalancer.passHostHeader=true
+volumes:
+  wordpress_data:
+    external: true
+    name: wordpress_datad
+networks:
+  network_swarm_public:
+    name: network_swarm_public
+    external: true

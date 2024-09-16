@@ -1,0 +1,51 @@
+version: "3.7"
+# definição dos serviços do stack
+services:
+  # definição do serviço do pgadmin4
+  pgadmin4:
+    # define a imagem do pgadmin4
+    image: dpage/pgadmin4:latest
+    # configur aa rede do serviço
+    networks:
+      - network_public
+    # volumes do pgadmin4
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    # define as variáveis de ambiente
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=luizeof@gmail.com
+      - PGADMIN_DEFAULT_PASSWORD=12314@luiz
+    deploy:
+      # configura o modo de deploy do pgadmin4
+      mode: replicated
+      # configura o numero de replicas do serviço do postgres (1 é o padrão)
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+          #- node.hostname == worker1
+      labels:
+        - traefik.enable=true
+        - traefik.http.routers.pgadmin4.rule=Host(`pga.luizeof.dev`)
+        - traefik.http.routers.pgadmin4.entrypoints=websecure
+        - traefik.http.routers.pgadmin4.priority=1
+        - traefik.http.routers.pgadmin4.tls.certresolver=letsencryptresolver
+        - traefik.http.services.pgadmin4.loadbalancer.server.port=80
+        - traefik.http.routers.pgadmin4.service=pgadmin4
+      resources:
+        # configura os limites de recursos do serviço do postgres
+        limits:
+          # configura o limite de CPU do serviço do postgres
+          cpus: "1"
+          # configura o limite de memória do serviço do postgres
+          memory: 1024M
+
+volumes:
+  pgadmin_data:
+    external: true
+    name: pgadmin_data
+
+networks:
+  network_public:
+    external: true
+    name: network_public

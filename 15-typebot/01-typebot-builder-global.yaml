@@ -1,0 +1,85 @@
+version: "3.7"
+
+services:
+  # Define a serviço builder
+  typebot_builder:
+    # Usa a imagem do Typebot Builder
+    # https://hub.docker.com/r/baptistearno/typebot-builder/tags
+    image: baptistearno/typebot-builder:2
+    # Define o hotname do container
+    hostname: "{{.Service.Name}}.{{.Task.Slot}}"
+    # Define a rede que o container vai usar
+    networks:
+      - network_swarm_public
+    # Define as variaveis de ambiente que o container vai usar
+    environment:
+      #Configurações do banco de dados
+      - DATABASE_URL=postgresql://postgres:SENHA@postgres:5432/typebot
+      # Configurações de Criptografia de Cookies
+      # Tem que ter exatamente 32 caracteres
+      # Gerar uma chave aqui https://www.avast.com/random-password-generator
+      - ENCRYPTION_SECRET=7/l2NKGhkMUHRV0dt/g8hD2YNopCrAeH
+      # Configurações do Plano do Typebot
+      - DEFAULT_WORKSPACE_PLAN=UNLIMITED
+      # Configura o endereço público do editor do Typebot
+      - NEXTAUTH_URL=https://meuboteditor.luizeof.dev
+      # Configura o endereço público do viewer do Typebot
+      - NEXT_PUBLIC_VIEWER_URL=https://meubot.luizeof.dev
+      # Configura o endereço interno do Typebot
+      - NEXTAUTH_URL_INTERNAL=http://localhost:3000
+      # Configurações para Habilitar / Desabilitar Criação de Contas
+      - DISABLE_SIGNUP=true
+      # Configurações do Typebot e SMTP
+      - ADMIN_EMAIL=contato@luizeof.dev
+      # Configurações do SMTP
+      - NEXT_PUBLIC_SMTP_FROM='Typebot' <contato@promovaweb.com>
+      - SMTP_AUTH_DISABLED=false
+      - SMTP_USERNAME=USER
+      - SMTP_PASSWORD=SENHA
+      - SMTP_HOST=smtp2http
+      - SMTP_PORT=25
+      - SMTP_SECURE=false
+      # Configurações do Typebot e Minio
+      # Acess Key do Minio
+      - S3_ACCESS_KEY=
+      # Secret Key do Minio
+      - S3_SECRET_KEY=
+      # Nome do Bucket do Minio
+      - S3_BUCKET=typebot
+      # Endereço Público do Minio
+      - S3_ENDPOINT=s3.luizeof.dev
+    deploy:
+      # Define o modo de deploy do container
+      mode: replicated
+      # Define o numero de replicas do container (sempre 1)
+      replicas: 1
+      # Define o local de execução do container
+      placement:
+        constraints:
+          - node.role == manager
+          # - node.hostname == worker1
+      resources:
+        limits:
+          # Define a quantidade de CPU para o Typebot para evitar travamento do Host
+          cpus: "1"
+          # Define a quantidade de RAM para o Typebot para evitar travamento do Host
+          memory: 1024M
+      labels:
+        # Habilita o Traefik
+        - traefik.enable=true
+        # Define o endereço publico do Typebot
+        - traefik.http.routers.typebot_builder.rule=Host(`meuboteditor.luizeof.dev`)
+        # Redireciona o endereço para HTTPS
+        - traefik.http.routers.typebot_builder.entrypoints=websecure
+        # Define o certificado SSL
+        - traefik.http.routers.typebot_builder.tls.certresolver=letsencryptresolver
+        # Define a porta do servidor publico do Typebot
+        - traefik.http.services.typebot_builder.loadbalancer.server.port=3000
+        # Define os Headers que o Typebot vai usar
+        - traefik.http.services.typebot_builder.loadbalancer.passHostHeader=true
+        # Define o serviço que irá ser usado
+        - traefik.http.routers.typebot_builder.service=typebot_builder
+networks:
+  network_swarm_public:
+    external: true
+    name: network_swarm_public

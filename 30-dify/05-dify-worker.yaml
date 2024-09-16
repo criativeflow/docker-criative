@@ -1,0 +1,34 @@
+version: '3.7'
+
+services:
+  # Define o Serviço de API do Dify
+  dify_worker:
+    # Define a imagem do Dify
+    # https://hub.docker.com/r/langgenius/dify-api
+    image: langgenius/dify-api:0.7.1
+    networks:
+      - network_swarm_public
+    environment:
+      #########################################################
+      #########################################################
+      # Configurações Gerais do Dify ##########################
+      #########################################################
+      #########################################################
+      # Startup mode, 'api' starts the API server.
+      MODE: worker
+
+
+    deploy:
+      # Modo de Deploy
+      mode: replicated
+      # Número de Réplicas
+      replicas: 1
+      # Define onde o deploy deve ser postado
+      placement:
+        constraints:
+          - node.role == manager
+
+networks:
+  network_swarm_public:
+    external: true
+    name: network_swarm_public
