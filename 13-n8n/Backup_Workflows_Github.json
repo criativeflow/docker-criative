@@ -1,0 +1,504 @@
+{
+  "name": "Backup Workflows Github",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "5c2e4d63-6bf1-4a42-9e4b-1c088892ac5c",
+      "name": "Loop Over Items",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        1700,
+        580
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "cac19cdb-7cbe-4309-82ba-2aa05ec3cf03",
+      "name": "Workflow",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.2,
+      "position": [
+        2280,
+        600
+      ]
+    },
+    {
+      "parameters": {
+        "amount": 2,
+        "unit": "seconds"
+      },
+      "id": "b5f41edd-e5f7-401d-9167-62ce782d8ca6",
+      "name": "Wait",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1,
+      "position": [
+        1980,
+        600
+      ],
+      "webhookId": "154226ae-b163-4932-a2f2-12865e621905"
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "resource": "file",
+        "owner": {
+          "__rl": true,
+          "value": "syncadigital",
+          "mode": "name"
+        },
+        "repository": {
+          "__rl": true,
+          "value": "backup-workflow-n8n",
+          "mode": "list",
+          "cachedResultName": "backup-workflow-n8n",
+          "cachedResultUrl": "https://github.com/syncadigital/backup-workflow-n8n"
+        },
+        "filePath": "=workflows1/{{ $('Workflow').item.json.id }}.json",
+        "fileContent": "={{ JSON.stringify($('Workflow').item.json, null, 2) }}",
+        "commitMessage": "=Backup Realizado em {{ $now }}",
+        "additionalParameters": {
+          "branch": {
+            "branch": "main"
+          }
+        }
+      },
+      "id": "3c922024-4f47-4bb0-84e9-9f96d91a76c4",
+      "name": "GitHub",
+      "type": "n8n-nodes-base.github",
+      "typeVersion": 1,
+      "position": [
+        4520,
+        1180
+      ],
+      "credentials": {
+        "githubOAuth2Api": {
+          "id": "1SrV0GnJdefl9AEk",
+          "name": "github synca"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "command": "n8n export:workflow --backup --output=/home/node/n8n-backups/workflows"
+      },
+      "id": "606849f6-eaca-4f80-b1ee-33cc0637d653",
+      "name": "ExportarWorkflows",
+      "type": "n8n-nodes-base.executeCommand",
+      "position": [
+        847,
+        573
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "fileSelector": "/home/node/n8n-backups/workflows/*.json"
+      },
+      "id": "ae64bf46-c951-4e04-928c-db76d6d065bc",
+      "name": "Read Binary Files",
+      "type": "n8n-nodes-base.readBinaryFiles",
+      "position": [
+        1087,
+        573
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "83f36888-bced-421a-b9a2-2546ca5b0c5d",
+      "name": "Move Binary Data",
+      "type": "n8n-nodes-base.moveBinaryData",
+      "position": [
+        1347,
+        573
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## Configura o Backup dos Workflows ",
+        "height": 326.29607250755294,
+        "width": 1097.2219381826642
+      },
+      "id": "417d22ae-81c1-40de-a9ab-498a20a164a5",
+      "name": "Sticky Note1",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        460,
+        460
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "triggerAtMinute": 15
+            }
+          ]
+        }
+      },
+      "id": "9a18edb9-0dad-448b-b8bb-edb3a7106cf1",
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        200,
+        580
+      ]
+    },
+    {
+      "parameters": {
+        "command": "rm -rf /home/node/n8n-backups/workflows"
+      },
+      "id": "61104b64-3c2a-4e79-a7a9-5f4b73630c47",
+      "name": "Execute Command",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        587,
+        573
+      ]
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "resource": "file",
+        "operation": "edit",
+        "owner": {
+          "__rl": true,
+          "value": "syncadigital",
+          "mode": "name"
+        },
+        "repository": {
+          "__rl": true,
+          "value": "backup-workflow-n8n",
+          "mode": "list",
+          "cachedResultName": "backup-workflow-n8n",
+          "cachedResultUrl": "https://github.com/syncadigital/backup-workflow-n8n"
+        },
+        "filePath": "=workflows1/{{ $('Workflow').item.json.id }}.json",
+        "fileContent": "={{ JSON.stringify($('Workflow').item.json, null, 2) }}",
+        "commitMessage": "=Backup Realizado em {{ $now }}",
+        "additionalParameters": {
+          "branch": {
+            "branch": "main"
+          }
+        }
+      },
+      "id": "64f547a1-e8ca-4a39-95e0-c045c57f9917",
+      "name": "GitHub1",
+      "type": "n8n-nodes-base.github",
+      "typeVersion": 1,
+      "position": [
+        3820,
+        1100
+      ],
+      "credentials": {
+        "githubOAuth2Api": {
+          "id": "1SrV0GnJdefl9AEk",
+          "name": "github synca"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "resource": "file",
+        "operation": "get",
+        "owner": {
+          "__rl": true,
+          "value": "syncadigital",
+          "mode": "name"
+        },
+        "repository": {
+          "__rl": true,
+          "value": "backup-workflow-n8n",
+          "mode": "list",
+          "cachedResultName": "backup-workflow-n8n",
+          "cachedResultUrl": "https://github.com/syncadigital/backup-workflow-n8n"
+        },
+        "filePath": "=workflows1/{{ $json.id }}.json",
+        "additionalParameters": {}
+      },
+      "id": "26d82923-0a19-4bfe-b714-8ba2da0c5f69",
+      "name": "GitHubWorkflow",
+      "type": "n8n-nodes-base.github",
+      "typeVersion": 1,
+      "position": [
+        2560,
+        600
+      ],
+      "credentials": {
+        "githubOAuth2Api": {
+          "id": "1SrV0GnJdefl9AEk",
+          "name": "github synca"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.error }}",
+              "operation": "isNotEmpty"
+            }
+          ]
+        }
+      },
+      "id": "78fff76c-4f6a-4850-b8dc-cd7a666e1f68",
+      "name": "IF",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        2860,
+        600
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "dcf80748-1419-4136-a734-02df5332e09a",
+      "name": "Convert to/from binary data",
+      "type": "n8n-nodes-base.moveBinaryData",
+      "typeVersion": 1.1,
+      "position": [
+        3160,
+        820
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.updatedAt }}",
+              "operation": "notEqual",
+              "value2": "={{ $('Workflow').item.json.updatedAt }}"
+            }
+          ]
+        }
+      },
+      "id": "90757540-bccd-45ec-8f5d-c7e3a1702c23",
+      "name": "IF1",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        3420,
+        1000
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "3bf367b7-9839-40d9-9e2b-0b7d1657db58",
+      "name": "No Operation, do nothing",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1980,
+        260
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Loop Over Items": {
+      "main": [
+        [
+          {
+            "node": "No Operation, do nothing",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Workflow": {
+      "main": [
+        [
+          {
+            "node": "GitHubWorkflow",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Workflow",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GitHub": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ExportarWorkflows": {
+      "main": [
+        [
+          {
+            "node": "Read Binary Files",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Binary Files": {
+      "main": [
+        [
+          {
+            "node": "Move Binary Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Execute Command",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Move Binary Data": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute Command": {
+      "main": [
+        [
+          {
+            "node": "ExportarWorkflows",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GitHub1": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GitHubWorkflow": {
+      "main": [
+        [
+          {
+            "node": "IF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF": {
+      "main": [
+        [
+          {
+            "node": "GitHub",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Convert to/from binary data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert to/from binary data": {
+      "main": [
+        [
+          {
+            "node": "IF1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF1": {
+      "main": [
+        [
+          {
+            "node": "GitHub1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "a9bad199-9ba1-40a4-ac9a-5e139ab63936",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "33738330930e3881dd5571eca013f36ddf8aab20e4ea5c1f2ebaf4a2b4668ac6"
+  },
+  "id": "jHl0UFQWg3OK3gMH",
+  "tags": []
+}
