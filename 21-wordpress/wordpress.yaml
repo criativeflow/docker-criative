@@ -3,7 +3,7 @@ services:
   # Define o serviço do Wordpress
   wordpress:
     # Define a imagem do Wordpress
-    image: luizeof/dockerpress-apache:latest
+    image: wordpress:latest
     # Define o hostname do container
     hostname: "{{.Service.Name}}.{{.Task.Slot}}"
     # Define o entrypoint do Container
@@ -18,20 +18,41 @@ services:
       - network_swarm_public
     # Define as Variaveis de Ambiente do Wordpress
     environment:
-      # Define o Nome do Banco de Dados
-      - WORDPRESS_DB_NAME=wordpress
+      #############################################################################################
+      #                                                                                           #
+      #                                                                                           #
+      #                              Informações de banco de dados                                #
+      #                                                                                           #
+      #                                                                                           #
+      #############################################################################################
       # Define o Servidor do MySQL
       - WORDPRESS_DB_HOST=mysql
-      # Define a Porta do MySQL
-      - WORDPRESS_DB_PORT=3306
       # Define o Usuário do MySQL
       - WORDPRESS_DB_USER=root
       # Define a Senha do MySQL
       - WORDPRESS_DB_PASSWORD=SENHA
+      # Define a Porta do MySQL
+      - WORDPRESS_DB_PORT=3306
+      # Define o Nome do Banco de Dados
+      - WORDPRESS_DB_NAME=wordpress
+      #############################################################################################
+      #                                                                                           #
+      #                                                                                           #
+      #                                    Informações do Redis                                   #
+      #                                                                                           #
+      #                                                                                           #
+      #############################################################################################
       # Define o Host do Redis
       - WP_REDIS_HOST=redis
       # Define o Indice do Banco de Dados
       - WP_REDIS_DATABASE=1
+      #############################################################################################
+      #                                                                                           #
+      #                                                                                           #
+      #                              Informações do Wordpress                                     #
+      #                                                                                           #
+      #                                                                                           #
+      #############################################################################################
       # Define o Endereço do Wordpress (sem https)
       - VIRTUAL_HOST=materiais.seusite.com.br
       # Define o Usuário Root do Wordpress

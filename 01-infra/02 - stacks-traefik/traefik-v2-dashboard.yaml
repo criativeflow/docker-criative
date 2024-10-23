@@ -1,0 +1,74 @@
+version: "3.7" # Define a versão do Docker Compose.
+
+services:
+  traefik:
+    image: traefik:v2.11 # Usa a imagem da versão 2.11 do Traefik.
+    hostname: "{{.Service.Name}}.{{.Task.Slot}}" # Define o hostname para cada instância com base no nome do serviço e slot da tarefa.
+    
+    command: # Comandos específicos do Traefik.
+      - "--api.dashboard=true" # Habilita o dashboard do Traefik (necessário para acessar a interface web de administração).
+      - "--providers.docker.swarmMode=true" # Habilita o modo Docker Swarm para Traefik.
+      - "--providers.docker.endpoint=unix:///var/run/docker.sock" # Aponta para o socket Docker para monitorar os serviços.
+      - "--providers.docker.exposedbydefault=false" # Por padrão, não expõe automaticamente os containers ao Traefik.
+      - "--providers.docker.network=network_swarm_public" # Define a rede do Swarm que o Traefik irá monitorar.
+      - "--entrypoints.web.address=:80" # Define o entrypoint HTTP na porta 80.
+      - "--entrypoints.web.http.redirections.entryPoint.to=websecure" # Redireciona todas as conexões HTTP (porta 80) para HTTPS (porta 443).
+      - "--entrypoints.web.http.redirections.entryPoint.scheme=https" # Especifica que o redirecionamento é para HTTPS.
+      - "--entrypoints.web.http.redirections.entrypoint.permanent=true" # Torna o redirecionamento permanente.
+      - "--entrypoints.websecure.address=:443" # Define o entrypoint HTTPS na porta 443.
+      - "--certificatesresolvers.letsencryptresolver.acme.httpchallenge=true" # Habilita o HTTP challenge do Let's Encrypt para gerar certificados SSL.
+      - "--certificatesresolvers.letsencryptresolver.acme.httpchallenge.entrypoint=web" # O desafio HTTP vai ser servido pelo entrypoint "web" (porta 80).
+      - "--certificatesresolvers.letsencryptresolver.acme.email={EMAIL VALIDO SEM CHAVES}" # Insere o email para registrar os certificados no Let's Encrypt (trocar pelo seu email).
+      - "--certificatesresolvers.letsencryptresolver.acme.storage=/etc/traefik/letsencrypt/acme.json" # Caminho onde os certificados e chave privada serão armazenados.
+      - "--log.level=DEBUG" # Define o nível de log como DEBUG para maior detalhe no monitoramento.
+      - "--log.format=common" # Define o formato dos logs como "common".
+      - "--log.filePath=/var/log/traefik/traefik.log" # Define o caminho onde os logs do Traefik serão armazenados.
+      - "--accesslog=true" # Habilita os logs de acesso.
+      - "--accesslog.filepath=/var/log/traefik/access-log" # Define o caminho onde os logs de acesso serão salvos.
+
+    deploy:
+      placement:
+        constraints:
+          - node.role == manager # Define que o Traefik só será executado no nó com função de manager.
+
+      labels: # Configurações de rotas e redirecionamento para HTTPS.
+        - "traefik.enable=true" # Habilita o Traefik para monitorar este serviço.
+        - "traefik.http.middlewares.redirect-https.redirectscheme.scheme=https" # Define o middleware para redirecionamento para HTTPS.
+        - "traefik.http.middlewares.redirect-https.redirectscheme.permanent=true" # Define que o redirecionamento para HTTPS é permanente.
+        - "traefik.http.routers.http-catchall.rule=hostregexp(`{host:.+}`)" # Define uma regra que captura todas as requisições HTTP.
+        - "traefik.http.routers.http-catchall.entrypoints=web" # Especifica que o catch-all será para requisições HTTP (entrypoint web).
+        - "traefik.http.routers.http-catchall.middlewares=redirect-https@docker" # Aplica o middleware de redirecionamento HTTPS ao catch-all.
+        - "traefik.http.routers.http-catchall.priority=1" # Define prioridade para o roteador.
+        - "traefik.http.routers.traefik.rule=Host(`traefik.<seu-dominio.com>`)" # Define uma rota para acessar o dashboard pelo domínio traefik.seu-dominio.com.
+        - "traefik.http.routers.traefik.service=api@internal" # Faz o roteamento do dashboard para o serviço interno da API do Traefik.
+        - "traefik.http.routers.traefik.entrypoints=websecure" # Acessa o dashboard pela porta HTTPS.
+        - "traefik.http.routers.traefik.tls.certresolver=letsencryptresolver" # Usa o Let's Encrypt para gerar o certificado HTTPS.
+
+
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro" # Monta o socket Docker no container em modo leitura.
+      - "vol_certificates:/etc/traefik/letsencrypt" # Volume para armazenar certificados Let's Encrypt.
+
+    networks:
+      - network_swarm_public # Conecta o serviço à rede overlay do Swarm.
+
+    ports:
+      - target: 80
+        published: 80
+        mode: host # Expõe a porta 80 para requisições HTTP no host.
+      - target: 443
+        published: 443
+        mode: host # Expõe a porta 443 para requisições HTTPS no host.
+
+volumes:
+  vol_shared:
+    external: true
+    name: volume_swarm_shared # Define um volume externo compartilhado entre serviços.
+  vol_certificates:
+    external: true
+    name: volume_swarm_certificates # Define um volume externo para armazenar os certificados SSL.
+
+networks:
+  network_swarm_public:
+    external: true
+    name: network_swarm_public # Define uma rede overlay externa do Swarm.
